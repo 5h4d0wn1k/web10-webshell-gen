@@ -27,10 +27,19 @@ Educational PHP/ASP/JSP web shell payload generator for authorized lab testing.
 ## Usage
 
 ```bash
-# Run demo mode (generates payloads to temp dir, prints summary)
-python3 firmware/webshell_gen.py
+# Run demo mode: generate all payloads + obfuscations to temp dir, verify artifacts
+python3 webshell_gen.py --demo        # or run with no arguments
 
-# Use programmatically
+# Targeted generation
+python3 webshell_gen.py --languages php --categories command_exec file_read --output-dir ./shells
+
+# Apply obfuscation and write the HTML report
+python3 webshell_gen.py --obfuscation base64 hex --report -o ./shells
+
+# Run the offline test suite
+python3 -m unittest discover -s tests
+
+# Programmatic use
 from firmware.webshell_gen import WebShellGenerator
 
 gen = WebShellGenerator(output_dir="./shells")
@@ -38,6 +47,35 @@ gen.generate(languages=["php"], categories=["command_exec"], obfuscation=["base6
 gen.generate_html_report()
 gen.print_summary()
 ```
+
+## Live Lab Test Plan
+
+Run against a local lab target only (a system or VM you own):
+
+1. `python3 webshell_gen.py --demo` — verify all 29+ payload artifacts are
+   generated across PHP/ASP/JSP with base64 + hex obfuscation, structurally
+   validated, the HTML report carries the legal shield, and the demo exits 0.
+2. `python3 -m unittest discover -s tests` — full offline suite (library
+   integrity, artifact generation, obfuscation wrapping, report output) must
+   pass.
+3. For authorized lab testing: deploy a generated artifact to an isolated VM
+   you own, confirm execution only there, and remove it afterwards. Never
+   deploy on any system you do not own.
+4. Review artifacts in the output directory before any lab use; confirm the
+   severity tags and legal header on every file.
+
+## Metrics
+
+- Demo wall time: < 2 s (artifact generation is entirely local, no network).
+- Payload library: 3 languages x 5 categories (command_exec, file_read,
+  file_write, reverse_shell, info_disclosure), PHP/ASP/JSP markers verified by
+  structural checks.
+- Obfuscation: base64, hex, and variable-name randomization all exercised in
+  the demo and tests.
+- Artifact output: text files with metadata headers + SHA-256 prefix and a
+  self-contained HTML report with the mandatory legal disclaimer.
+- Test suite: 10 deterministic offline tests (`python3 -m unittest`), no
+  network access required.
 
 ## Example Output
 
